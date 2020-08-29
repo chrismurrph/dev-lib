@@ -1,0 +1,16 @@
+/target
+/classes
+*.class
+/.nrepl-port
+*.iml
+*.log
+*.txt
+*.jar
+node_modules
+.cpcache
+resources/public/js
+resources/public/css
+favicon.ico
+.shadow-cljs
+package-lock.json
+/.idea/
