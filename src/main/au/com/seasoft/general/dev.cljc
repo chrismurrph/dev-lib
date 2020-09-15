@@ -1,4 +1,4 @@
-(ns general.dev
+(ns au.com.seasoft.general.dev
   #?(:clj (:refer-clojure :exclude [assert]))
   (:require
     [clojure.string :as str]

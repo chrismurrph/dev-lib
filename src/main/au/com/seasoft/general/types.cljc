@@ -1,4 +1,4 @@
-(ns general.types
+(ns au.com.seasoft.general.types
   (:require [clojure.spec.alpha :as s]))
 
 ;;
