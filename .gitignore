@@ -14,3 +14,4 @@ favicon.ico
 .shadow-cljs
 package-lock.json
 /.idea
+/projectFilesBackup/
