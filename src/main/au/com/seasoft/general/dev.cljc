@@ -2,7 +2,7 @@
   #?(:clj (:refer-clojure :exclude [assert]))
   (:require
     [clojure.string :as str]
-    [general.types :as gt]
+    [au.com.seasoft.general.types :as gt]
     [cljs.reader :as reader]
     #?(:clj
        [clojure.pprint :as pprint])))
@@ -288,6 +288,20 @@
            out))
        (into {})))
 
+(defn safe-first [x]
+  (try
+    (first x)
+    (catch #?(:cljs :default :clj Throwable) _
+      (err "Cannot first on " x)
+      nil)))
+
+(defn safe-second [x]
+  (try
+    (second x)
+    (catch #?(:cljs :default :clj Throwable) _
+      (err "Cannot second on " x)
+      nil)))
+
 ;;
 ;; One day of debugging with Pathom hiding the error - lets always use this...
 ;;
@@ -318,8 +332,10 @@
    (assert (not (-> ks first vector?)) ["You usually dissoc a varargs list of keywords (so don't wrap in vector)" (first ks)])
    m))
 
-(declare probe-on)
-(declare probe-off)
+(declare probe->)
+(declare probe->>)
+(declare probe->off)
+(declare probe->>off)
 
 (defn probe-count-on [xs]
   (log-pr "COUNT" (count xs))
@@ -385,13 +401,14 @@
 (defn probe-f-off [f x & msgs]
   x)
 
-(defn probe-off
+(defn probe->off
   ([x]
    x)
   ([x & msgs]
    x))
 
-(defn probe-on
+(defn probe->
+  "Messages go at the end, suitable for use with -> threaded macro where first param position is important"
   ([x]
    (-> x
        pp)
@@ -399,6 +416,23 @@
   ([x & msgs]
    (apply log-pr x "<--" msgs)
    x))
+
+(defn probe->>off
+  ([x]
+   x)
+  ([msg x]
+   x))
+
+(defn probe->>
+  "Message goes at the beginning, suitable for use with ->> threaded macro where last param position is important"
+  ([x]
+   (-> x
+       pp)
+   x)
+  ([msg x]
+   (log-pr x "<--" msg)
+   x))
+
 
 ;;
 ;; Sometimes I forget and use it, then get thrown out of JVM. This fixes that problem!
