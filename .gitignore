@@ -13,4 +13,4 @@ resources/public/css
 favicon.ico
 .shadow-cljs
 package-lock.json
-/.idea/
+.idea
