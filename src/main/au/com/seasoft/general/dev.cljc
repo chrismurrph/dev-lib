@@ -367,7 +367,7 @@
 (defn probe-first-n-off [n xs]
   xs)
 
-(defn err-nil-probe
+(defn prob-err-nil
   ([x]
    (assert x "Can't assign nil (or false)")
    x)
@@ -375,7 +375,7 @@
    (assert x (apply str "Can't assign nil (or false), msg: " msg))
    x))
 
-(defn must-be-fn-probe [f msg]
+(defn probe-must-be-fn [f msg]
   (fn [x]
     (assert (not (f x)) (str msg ", got: <" x ">"))
     x))
