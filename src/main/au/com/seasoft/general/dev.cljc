@@ -332,6 +332,15 @@
    (assert (not (-> ks first vector?)) ["You usually dissoc a varargs list of keywords (so don't wrap in vector)" (first ks)])
    m))
 
+(defn safe-get [m k]
+  (assert (map? m) ["First arg to get expected to be a map" m])
+  (assert (seq m) ["Doesn't make sense to get from an empty map" m])
+  (assert k ["Doing a lookup on a map with nil is probably unintended" k (keys m)])
+  (let [res (get m k)]
+    (if (some? res)
+      res
+      (throw (ex-info "Could not find key in map" {:key k :map-keys (keys m)})))))
+
 (declare probe->)
 (declare probe->>)
 (declare probe->off)
