@@ -7,10 +7,24 @@
     #?(:clj
        [clojure.pprint :as pprint])))
 
+(declare pp-str)
+
+(defn pp-last-arg-hof [pr-f]
+  (fn [& args]
+    (let [last-arg (last args)]
+      (if (map? last-arg)
+        (let [as-str       (str "\n" (pp-str last-arg))
+              all-but-last (->> args
+                                (take (-> args count dec))
+                                vec)
+              new-args     (conj all-but-last as-str)]
+          (apply pr-f new-args))
+        (apply pr-f args)))))
+
 #?(:cljs (enable-console-print!))
 
-#?(:cljs (def log-pr js/console.log)
-   :clj  (def log-pr println))
+#?(:cljs (def log-pr (pp-last-arg-hof js/console.log))
+   :clj  (def log-pr (pp-last-arg-hof println)))
 
 ;;
 ;; About instrumentation and probing that is really useful during development. Lots
@@ -49,8 +63,6 @@
   (when (not pred-res)
     #?(:cljs (throw (js/Error. ["Assert failed" args]))
        :clj  (throw (AssertionError. ["Assert failed" args])))))
-
-(declare pp-str)
 
 (defn err [& args]
   (apply log-pr "PROBLEM:" args)
@@ -113,12 +125,12 @@
 ;;
 (defn warn [& args]
   (assert (seq args) "Don't call warn with no args i.e. say something")
-  (assert (some? (first args)) "Don't warn on nothing i.e. say something")
+  (assert (-> args first some?) "Don't warn on nothing i.e. say something")
   (apply log-pr "WARN:" args))
 
 (defn warn-off [& args]
   (assert (seq args) "Don't call warn with no args i.e. say something")
-  (assert (some? (first args)) "Don't warn on nothing i.e. say something"))
+  (assert (-> args first some?) "Don't warn on nothing i.e. say something"))
 
 ;;
 ;; Will have to use this instead of asserts in all our components
@@ -238,17 +250,17 @@
 (defn one-only-warn [xs & msgs]
   (-one-only assert-warn xs msgs))
 
-(defn- -first-no-more [assert-f xs]
-  (assert-f (gt/n-able? xs) ["Not n-able" xs])
+(defn- -first-no-more [context-msg assert-f xs]
+  (assert-f (gt/n-able? xs) ["Not n-able in first-no-more" context-msg xs])
   (assert-f (= nil (second xs))
-            (str "Only supposed to be one. However:\nFIRST:\n" (first xs) "\nSECOND:\n" (second xs)))
+            (str context-msg ". Only supposed to be one. However:\nFIRST:\n" (first xs) "\nSECOND:\n" (second xs)))
   (first xs))
 
-(defn first-no-more [xs]
-  (-first-no-more assert-not-macro xs))
+(defn first-no-more [context-msg xs]
+  (-first-no-more context-msg assert-not-macro xs))
 
-(defn first-no-more-warn [xs]
-  (-first-no-more assert-warn xs))
+(defn first-no-more-warn [context-msg xs]
+  (-first-no-more context-msg assert-warn xs))
 
 (defn summarize [x]
   (cond
@@ -341,6 +353,12 @@
       res
       (throw (ex-info "Could not find key in map" {:key k :map-keys (keys m)})))))
 
+(defn safe-trim-hof [desc]
+  (fn [s]
+    (if (nil? s)
+      (warn "Can't trim a nil:" desc)
+      (str/trim s))))
+
 (declare probe->)
 (declare probe->>)
 (declare probe->off)
@@ -367,7 +385,7 @@
 (defn probe-first-n-off [n xs]
   xs)
 
-(defn prob-err-nil
+(defn probe-err-nil
   ([x]
    (assert x "Can't assign nil (or false)")
    x)
